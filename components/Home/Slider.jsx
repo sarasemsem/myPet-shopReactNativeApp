@@ -1,34 +1,50 @@
-import { View, Text, Dimensions } from 'react-native'
-import React, { useState } from 'react'
+import { View, Text, Dimensions, Image, FlatList } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { collection, getDocs } from "firebase/firestore";
 import { db } from './../../config/FirebaseConfig';
-import { use } from 'react';
-import { FlatList } from 'react-native-web';
+
 export default function Slider() {
-const [sliders,setSliders]=useState([]);
+    const [sliders, setSliders] = useState([]);
+
     useEffect(() => {
-      getSliders()
-    },[])
-    const getSliders=async()=>{
-     setSliders([]);
-      const snapshot = await getDocs(collection(db, "Sliders"));
-      snapshot.forEach((doc) => {
-        console.log(doc.id, " => ", doc.data());
-        setSliders(sliders=>[...sliders,doc.data()]);
-      });
-    }
-  return (
-    <View>
-      <FlatList
-        data={sliders}
-        horizontal={true}
-        renderItem={({item})=>(
-          <View>
-            <Image source={{uri:item?.imageUrl}} style={{width:Dimensions.get('screen').width*0.9,height:160,borderRadius:15}}/>
-            <Text>{item.name}</Text>
-          </View>       
-        )}
-      />
-    </View>
-  )
+        const fetchData = async () => {
+          try {
+            const querySnapshot = await getDocs(collection(db, "Sliders"));
+            const fetchedSliders = querySnapshot.docs.map(doc => ({
+              id: doc.id,
+              ...doc.data(),
+            }));
+            console.log(fetchedSliders); // Debug here
+            setSliders(fetchedSliders);
+          } catch (error) {
+            console.error('Error fetching sliders:', error);
+          }
+        };
+        fetchData();
+      }, []);
+      
+  
+
+    return (
+        <View>
+            <FlatList
+                data={sliders}
+                horizontal={true}
+                keyExtractor={(item) => item.id} // Add a key extractor
+                renderItem={({ item }) => (
+                    <View>
+                        
+                        <Image
+                            source={{ uri: item?.imageUrl }}
+                            style={{
+                                width: Dimensions.get('screen').width * 0.9,
+                                height: 160,
+                                borderRadius: 10,
+                            }}
+                        />
+                    </View>
+                )}
+            />
+        </View>
+    );
 }
